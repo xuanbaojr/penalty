@@ -1,9 +1,7 @@
 ﻿
 #include"Common.h"
 #include"Ball.h"
-#include"Menu.h"
-#include"BluePoint.h"
-#include"RedPoint.h"
+
 //Texture wrapper class
 
 
@@ -252,6 +250,12 @@ std::vector<LTexture> vecRL(10);
 std::vector<LTexture> vecGM(10);
 std::vector<LTexture> vecRM(10);
 
+class Button
+{
+public:
+	SDL_Rect a;
+
+};
 
 
 
@@ -325,21 +329,21 @@ bool loadMedia()
 	//Loading success flag
 	bool success = true;
 
-	gMusic = Mix_LoadMUS( "D:/CODE/GAME/GameVs/ConsoleApplication1/ConsoleApplication1/music/menu.wav" );
+	gMusic = Mix_LoadMUS( "music/menu.wav" );
     if( gMusic == NULL )
     {
         printf( "Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError() );
         success = false;
     }
 
-	mBackground = Mix_LoadMUS( "D:/CODE/GAME/GameVs/ConsoleApplication1/ConsoleApplication1/music/background.wav" );
+	mBackground = Mix_LoadMUS( "music/background.wav" );
     if( mBackground == NULL )
     {
         printf( "Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError() );
         success = false;
     }
 
-	mGoal = Mix_LoadMUS( "D:/CODE/GAME/GameVs/ConsoleApplication1/ConsoleApplication1/music/goal.wav" );
+	mGoal = Mix_LoadMUS( "music/goal.wav" );
     if( mGoal == NULL )
     {
         printf( "Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError() );
@@ -347,7 +351,7 @@ bool loadMedia()
     }
 
     //Load sound effects  
-    gHigh = Mix_LoadWAV( "D:/CODE/GAME/GameVs/ConsoleApplication1/ConsoleApplication1/music/goal.wav" );
+    gHigh = Mix_LoadWAV( "music/goal.wav" );
     if( gHigh == NULL )
     {
         printf( "Failed to load high sound effect! SDL_mixer Error: %s\n", Mix_GetError() );
@@ -356,22 +360,22 @@ bool loadMedia()
 
 	for(int i=0;i<10;i++)
 		{
-			if( !vecGL[i].loadFromFile( "D:/CODE/GAME/GameVs/ConsoleApplication1/ConsoleApplication1/img/green.png" ) )
+			if( !vecGL[i].loadFromFile( "img/green.png" ) )
 			{
 				printf( "Failed to load Point texture!\n" );
 				success = false;
 			}
-			if( !vecRL[i].loadFromFile( "D:/CODE/GAME/GameVs/ConsoleApplication1/ConsoleApplication1/img/red.png" ) )
+			if( !vecRL[i].loadFromFile( "img/red.png" ) )
 			{
 				printf( "Failed to load Point texture!\n" );
 				success = false;
 			}
-			if( !vecGM[i].loadFromFile( "D:/CODE/GAME/GameVs/ConsoleApplication1/ConsoleApplication1/img/green.png" ) )
+			if( !vecGM[i].loadFromFile( "img/green.png" ) )
 			{
 				printf( "Failed to load Point texture!\n" );
 				success = false;
 			}
-			if( !vecRM[i].loadFromFile( "D:/CODE/GAME/GameVs/ConsoleApplication1/ConsoleApplication1/img/red.png" ) )
+			if( !vecRM[i].loadFromFile( "img/red.png" ) )
 			{
 				printf( "Failed to load Point texture!\n" );
 				success = false;
@@ -379,36 +383,36 @@ bool loadMedia()
 		}
 
 
-	if( !gMenuBack.loadFromFile( "D:/CODE/GAME/GameVs/ConsoleApplication1/ConsoleApplication1/img/menu.png" ) )
+	if( !gMenuBack.loadFromFile( "img/menu.png" ) )
 	{
 		printf( "Failed to load Menu texture!\n" );
 		success = false;
 	}
-	if( !win.loadFromFile( "D:/CODE/GAME/GameVs/ConsoleApplication1/ConsoleApplication1/img/win.png" ) )
+	if( !win.loadFromFile( "img/win.png" ) )
 	{
 		printf( "Failed to load Win texture!\n" );
 		success = false;
 	}
 	
-	if( !board.loadFromFile( "D:/CODE/GAME/GameVs/ConsoleApplication1/ConsoleApplication1/img/2.png" ) )
+	if( !board.loadFromFile( "img/2.png" ) )
 	{
 		printf( "Failed to load board texture!\n" );
 		success = false;
 	}
 	//Load dot texture
-	if( !gDotTexture.loadFromFile( "D:/CODE/GAME/GameVs/ConsoleApplication1/ConsoleApplication1/img/ball1.png" ) )
+	if( !gDotTexture.loadFromFile( "img/ball1.png" ) )
 	{
 		printf( "Failed to load dot texture!\n" );
 		success = false;
 	}
 	//Load Background
-	if( !background.loadFromFile( "D:/CODE/GAME/GameVs/ConsoleApplication1/ConsoleApplication1/img/111.png" ) )
+	if( !background.loadFromFile( "img/111.png" ) )
 	{
 		printf( "Failed to load Background texture!\n" );
 		success = false;
 	}
 
-	if( !gKeeperTexture.loadFromFile( "D:/CODE/GAME/GameVs/ConsoleApplication1/ConsoleApplication1/img/character.png"  ))
+	if( !gKeeperTexture.loadFromFile( "img/character.png"  ))
 	{
 		printf( "Failed to load walking animation texture!\n" );
 		success = false;
@@ -456,7 +460,7 @@ bool loadMedia()
 		gSpriteClips[ 7 ].w =  105;
 		gSpriteClips[ 7 ].h = 182;
 	}
-	gFont = TTF_OpenFont( "D:/CODE/GAME/GameVs/ConsoleApplication1/ConsoleApplication1/img/lazy.ttf", 14 );
+	gFont = TTF_OpenFont( "img/lazy.ttf", 14 );
     if( gFont == NULL )
     {
         printf( "Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError() );
