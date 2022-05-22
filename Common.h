@@ -12,6 +12,7 @@
 #include <vector>
 #include <SDL_ttf.h>
 #include <SDL_mixer.h>
+#include <sstream>
 
 //Screen dimension constants
 const int SCREEN_WIDTH = 1280;

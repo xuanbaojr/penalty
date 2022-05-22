@@ -13,6 +13,8 @@ class Dot
 		void dir1(int a);
 		//Moves the dot
 		bool move();
+		bool move1();
+		bool move2();
 		void home();
 		
 		float xVel, yVel;

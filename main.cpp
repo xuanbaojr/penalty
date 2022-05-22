@@ -1,6 +1,7 @@
 ﻿
 #include"Common.h"
 #include"Ball.h"
+#include"button.h"
 
 //Texture wrapper class
 
@@ -79,6 +80,8 @@ LTexture board;
 LTexture gPointTexture;
 SDL_Rect gSpriteClips2[2];
 LTexture win;
+LTexture mPlay;
+LTexture lPlay;
 //Globally used font
 TTF_Font *gFont = NULL;
 
@@ -245,18 +248,17 @@ void showball(Dot a)
 
 LTexture gKeeperTexture;
 LTexture gButton;
-std::vector<LTexture> vecGL(10);
-std::vector<LTexture> vecRL(10);
-std::vector<LTexture> vecGM(10);
-std::vector<LTexture> vecRM(10);
+LTexture arrow;
 
-class Button
-{
-public:
-	SDL_Rect a;
+LTexture winL;
+LTexture winM;
+LTexture loseL;
+LTexture loseM;
 
-};
-
+std::vector<LTexture> vecGL(100);
+std::vector<LTexture> vecRL(100);
+std::vector<LTexture> vecGM(100);
+std::vector<LTexture> vecRM(100);
 
 
 bool init()
@@ -343,13 +345,6 @@ bool loadMedia()
         success = false;
     }
 
-	mGoal = Mix_LoadMUS( "music/goal.wav" );
-    if( mGoal == NULL )
-    {
-        printf( "Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError() );
-        success = false;
-    }
-
     //Load sound effects  
     gHigh = Mix_LoadWAV( "music/goal.wav" );
     if( gHigh == NULL )
@@ -358,7 +353,7 @@ bool loadMedia()
         success = false;
     }
 
-	for(int i=0;i<10;i++)
+	for(int i=0;i<100;i++)
 		{
 			if( !vecGL[i].loadFromFile( "img/green.png" ) )
 			{
@@ -388,33 +383,62 @@ bool loadMedia()
 		printf( "Failed to load Menu texture!\n" );
 		success = false;
 	}
-	if( !win.loadFromFile( "img/win.png" ) )
+	if( !winL.loadFromFile( "img/winL.png" ) )
+	{
+		printf( "Failed to load Menu texture!\n" );
+		success = false;
+	}if( !winM.loadFromFile( "img/winM.png" ) )
+	{
+		printf( "Failed to load Menu texture!\n" );
+		success = false;
+	}if( !loseL.loadFromFile( "img/loseL.png" ) )
+	{
+		printf( "Failed to load Menu texture!\n" );
+		success = false;
+	}if( !loseM.loadFromFile( "img/loseM.png" ) )
+	{
+		printf( "Failed to load Menu texture!\n" );
+		success = false;
+	}
+	if( !mPlay.loadFromFile( "img/mplay.png" ) )
+	{
+		printf( "Failed to load Menu Button texture!\n" );
+		success = false;
+	}
+
+	if( !lPlay.loadFromFile( "img/lplay.png" ) )
+	{
+		printf( "Failed to load Menu Button texture!\n" );
+		success = false;
+	}
+
+	/*if( !win.loadFromFile( "img/win.png" ) )
 	{
 		printf( "Failed to load Win texture!\n" );
 		success = false;
-	}
-	
-	if( !board.loadFromFile( "img/2.png" ) )
-	{
-		printf( "Failed to load board texture!\n" );
-		success = false;
-	}
+	}*/
+
 	//Load dot texture
 	if( !gDotTexture.loadFromFile( "img/ball1.png" ) )
 	{
-		printf( "Failed to load dot texture!\n" );
+		printf( "Failed to load ball texture!\n" );
 		success = false;
 	}
 	//Load Background
-	if( !background.loadFromFile( "img/111.png" ) )
+	if( !background.loadFromFile( "img/background1.png" ) )
 	{
 		printf( "Failed to load Background texture!\n" );
 		success = false;
 	}
-
-	if( !gKeeperTexture.loadFromFile( "img/character.png"  ))
+	if( !arrow.loadFromFile( "img/arrow.png" ) )
 	{
-		printf( "Failed to load walking animation texture!\n" );
+		printf( "Failed to load arrow texture!\n" );
+		success = false;
+	}
+
+	if( !gKeeperTexture.loadFromFile( "img/character1.png"  ))
+	{
+		printf( "Failed to load goalkeeper animation texture!\n" );
 		success = false;
 	}
 	else
@@ -460,23 +484,6 @@ bool loadMedia()
 		gSpriteClips[ 7 ].w =  105;
 		gSpriteClips[ 7 ].h = 182;
 	}
-	gFont = TTF_OpenFont( "img/lazy.ttf", 14 );
-    if( gFont == NULL )
-    {
-        printf( "Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError() );
-        success = false;
-    }
-    else
-    {
-        //Render text
-        SDL_Color textColor = { 255, 255, 255 };
-        if( !gTextTexture.loadFromRenderedText( "  ", textColor ) )
-        {
-            printf( "Failed to render text texture!\n" );
-            success = false;
-        }
-    }
-
 	
 	return success;
 }
@@ -488,11 +495,18 @@ void close()
 	background.free();
 	gKeeperTexture.free();
 	gPointTexture.free();
+	mPlay.free();
+	lPlay.free();
 	win.free();
 	gButton.free();
+	winL.free();
+	winM.free();
+	loseL.free();
+	loseM.free();
+	arrow.free();
 	gMenuBack.free();
 	TTF_CloseFont( gFont );
-	for(int i=0;i<10;i++)
+	for(int i=0;i<100;i++)
 	{
 		vecGL[i].free();
 		vecRL[i].free();
@@ -531,25 +545,26 @@ int main( int argc, char* args[] )
 	bool pointM = false;
 
 	int check = 0;
+	int choose = -1;
 	int cB = 0, cM = 0;
 	
 	int scoreL = 0; int scoreL1 = 5;
 	int scoreM = 0; int scoreM1 = 5;
 
-	bool winL = false;
-	bool winM = false;
+	bool winL1 = false;
+	bool winM1 = false;
 
 	int a = rand()%3;
-	int b; int k = -1;
+	int b = -1; int k = -1;
 	bool run = false;
 	bool start = false;
 	bool mMenu = true;
 
-	std::vector<bool> shotGL(10);
-	std::vector<bool> shotRL(10);
-	std::vector<bool> shotGM(10);
-	std::vector<bool> shotRM(10);
-	for(int i = 0; i < 10; i++)
+	std::vector<bool> shotGL(100);
+	std::vector<bool> shotRL(100);
+	std::vector<bool> shotGM(100);
+	std::vector<bool> shotRM(100);
+	for(int i = 0; i < 100; i++)
 	{
 		shotGL[i] = false;
 		shotRL[i] = false;
@@ -577,11 +592,19 @@ int main( int argc, char* args[] )
 			SDL_Event e;
 			static int kx;
 			Dot dot;
-			Mix_PlayMusic( gMusic, -1 );
+			Button button(880,465,70,85);
+			Button buttonL (1060,465,70,85);
+
+			button.live = false;
+			buttonL.live = false;
+			
+			//Mix_PlayMusic( gMusic, -1 );
 
 			while( !quit  )
 			{	
+				
 				if(check == 0){
+					
 					b = a;
 					while( SDL_PollEvent( &e ) != 0 )
 					{
@@ -603,28 +626,46 @@ int main( int argc, char* args[] )
 									start = true;  Mix_HaltMusic(); break;
 							}
 						}
+						button.handle(&e);
+						buttonL.handle(&e);
 					}
 					
 					
 					SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
 					SDL_RenderClear( gRenderer );
 
-					background.render(1,1);				
+					background.render(1,1);	
+					if( cB == 0 && cM == 0) arrow.render(635,180);
+					if( k==3 && cM > 0) arrow.render(635,180);
 
 					SDL_Rect* currentClip = &gSpriteClips[frame];
 	    
 					gKeeperTexture.render( ( SCREEN_WIDTH - currentClip->w ) / 2 - kx, ( SCREEN_HEIGHT - currentClip->h ) /2 - 70, currentClip );					
 					showball(dot);
 
-					if( Mix_PlayingMusic() == 0 )
-                            {
-                                //Play the music
-                                Mix_PlayMusic( mBackground, -1 );
-                            }
+					//if( Mix_PlayingMusic() == 0 )
+     //                       {
+     //                           //Play the music
+     //                           Mix_PlayMusic( mBackground, -1 );
+     //                       }
 					if(start == false)
 					{						
 						gMenuBack.render(1,1);
-						gTextTexture.render( 900 , 600 );
+\
+						SDL_RenderPresent( gRenderer );
+						button.live = true;
+						buttonL.live = true;
+						button.handle(&e);
+						buttonL.handle(&e);
+						
+						if(buttonL.live == false) {check = 1; choose = 1;}
+						if(button.live == false)  { check = 0; choose = 0; }
+
+						if(button.live == false || buttonL.live == false) 
+						{
+							start = true;
+							//Mix_HaltMusic();
+						}
 					}
 					
 					if(run == true && start == true)
@@ -632,30 +673,50 @@ int main( int argc, char* args[] )
 						dot.dir(b);	
 						if(k==1)
 						{
-							if(dot.move() == false )
+							if(dot.move2() == false )
 							{
-								dot.move();
+								dot.move2();
 								frame = 3;
 							}
 							else 
 							{	
+								if(choose == 1)
+								{
+									cM++;
+									run = false;
+									pointM = true;
+									if(b!=k) {
+									shotGM[cM] = true;
+									scoreM ++;
+							//		scoreM1 = 5 - cM + scoreM;
+								}
+								else
+								{
+									shotRM[cM] = true;
+							//		scoreM1 = 5 - cM + scoreM;
+								}
+								}
+								else{
 								cB++;
 								run = false;
 								pointL = true;
 								if(b!=k) {
 									shotGL[cB] = true;
 									scoreL ++;
-									scoreL1 = 5 - cB + scoreL;									
+							//		scoreL1 = 5 - cB + scoreL;
 								}
 								else
 								{
 									shotRL[cB] = true;
-									scoreL1 = 5 - cB + scoreL;
+							//		scoreL1 = 5 - cB + scoreL;
+								}
 								}
 								
 								Mix_PlayChannel( -1, gHigh, 0 );
 								a = rand()%3;
+								//cM++;
 								check = 1;
+
 							}	
 						}
 						
@@ -669,23 +730,42 @@ int main( int argc, char* args[] )
 							}
 							else 
 							{	
+								if(choose == 1)
+								{
+									cM++;
+									run = false;
+									pointM = true;
+									if(b!=k) {
+									shotGM[cM] = true;
+									scoreM ++;
+							//		scoreM1 = 5 - cM + scoreM;
+								}
+								else
+								{
+									shotRM[cM] = true;
+							//		scoreM1 = 5 - cM + scoreM;
+								}
+								}
+								else{
 								cB++;
 								run = false;
 								pointL = true;
 								if(b!=k) {
 									shotGL[cB] = true;
 									scoreL ++;
-									scoreL1 = 5 - cB + scoreL;
+							//		scoreL1 = 5 - cB + scoreL;
 								}
 								else
-								{ 
-									scoreL1 = 5 - cB + scoreL;
+								{
 									shotRL[cB] = true;
+							//		scoreL1 = 5 - cB + scoreL;
 								}
-								
+								}
 								Mix_PlayChannel( -1, gHigh, 0 );
 								a = rand()%3;
+								//cM++;
 								check = 1;
+							
 							}	
 						}
 
@@ -699,93 +779,126 @@ int main( int argc, char* args[] )
 							}
 							else 
 							{	
+								if(choose == 1)
+								{
+									cM++;
+									run = false;
+									pointM = true;
+									if(b!=k) {
+									shotGM[cM] = true;
+									scoreM ++;
+								//	scoreM1 = 5 - cM + scoreM;
+								}
+								else
+								{
+									shotRM[cM] = true;
+								//	scoreM1 = 5 - cM + scoreM;
+								}
+								}
+								else{
 								cB++;
 								run = false;
 								pointL = true;
 								if(b!=k) {
 									shotGL[cB] = true;
 									scoreL ++;
-									scoreL1 = 5 - cB + scoreL;
-									
+								//	scoreL1 = 5 - cB + scoreL;
 								}
 								else
 								{
 									shotRL[cB] = true;
-									scoreL1 = 5 - cB + scoreL;
+								//	scoreL1 = 5 - cB + scoreL;
 								}
-								
+								}
 								Mix_PlayChannel( -1, gHigh, 0 );
 								a = rand()%3;
+								//cM++;
 								check = 1;
 							}	
 						}
 
 						if(k==3)
-						{
+						{	
+			
 								dot.home();
 								frame = 0;
 								kx = 0;
 								run = false;
+								std::cout<<cB<<" "<<scoreL<<" "<<scoreL1;
 
 						}
 					}
 
-					if(pointL == true ){
+					scoreM1 = 5 - cM + scoreM;
+					scoreL1 = 5 - cB + scoreL;
+					if(pointL == true || pointM  == true){
 																
-								for(int i=0;i<10;i++){
-									
-									if(shotGL[i]== true)  vecGL[i].render(200 + i*30 ,660);									
+								for(int i=0;i<100;i++){
+																	
+									if(shotGL[i]== true)  vecGL[i].render(92 + i*44 ,650);									
 								
-									if(shotRL[i] == true) vecRL[i].render(200 + i*30 ,660);
+									if(shotRL[i] == true) vecRL[i].render(92 + i*44 ,650);
 									
-									if(shotGM[i] == true) vecGM[i].render(480 + i*30 ,660);
+									if(shotGM[i] == true) vecGM[i].render(429 + i*44 ,650);
 																
-									if(shotRM[i] == true) vecRM[i].render(480 + i*30 ,660);
+									if(shotRM[i] == true) vecRM[i].render(429 + i*44 ,650);		
 															
 								}
+							//	std::cout<<"a";
 					}					
 					
 					SDL_RenderPresent( gRenderer );
 					}
 					if( cB <= 5 )
 					{
-						if(scoreL > scoreM1){
-							winL = true;
+						if(scoreL > scoreM1  ){
+							winL1 = true;
 						}
 
 					}
-					while(winL == true )
+					if(cB>5)
+					{	
+						if(choose == 1 && cB ==cM){
+						if(shotGM[cB] == true && shotGL[cB] == false ) winM1 = true ;
+						if(shotGM[cB] == false && shotGL[cB] == true )  winL1 = true; 
+						}
+					}
+					while(winL1 == true )
 					{
 						std::cout<<"l";
-						win.render(1,1);
+						if(choose == 1) winL.render(1,1);
+						if(choose == 0) loseM.render(1,1);
 						SDL_RenderPresent( gRenderer );
 						
-
 						while( SDL_PollEvent( &e ) != 0 ){
 					
+
 						if( e.type == SDL_QUIT ) quit = true;
 					
 						else if( e.type == SDL_KEYDOWN ){
 						
+						// button.handle(&e)
 						switch( e.key.keysym.sym )
 							{
 								case SDLK_m:
 									cB = 0; cM = 0; scoreL = 0; scoreM = 0; scoreL1 = 5; scoreM1 = 5;
-									for(int i = 0; i < 10; i++)
+									for(int i = 0; i < 100; i++)
 									{
 										shotGL[i] = false;
 										shotRL[i] = false;
 										shotGM[i] = false;
 										shotRM[i] = false;
 									}
-									winL = false;
-									winM = false;
-									check = 0;
+									winL1 = false;
+									winM1 = false;
+								//	check = 0;
 									kx = 0;
 									dot.home();
 									frame = 0;
+									start = false;
 									break;						
 							}
+
 						}
 					}
 
@@ -806,21 +919,21 @@ int main( int argc, char* args[] )
                         //Select surfaces based on key press
 						switch( e.key.keysym.sym )
 						{
-							case SDLK_w:
+							case SDLK_UP:
 								b = 1; run = true; break;
 							
-							case SDLK_a:
+							case SDLK_LEFT:
 								b = 0; run = true; break;
 
-							case SDLK_d:
+							case SDLK_RIGHT:
 								b = 2; run = true; break;
 
 							case SDLK_SPACE:
 								b = 3; run = true; break;
-							case SDLK_r:
-								start = true; break;
 							}
 						}
+						button.handle(&e);
+						buttonL.handle(&e);
 					}
 				
 					//Clear screen
@@ -828,6 +941,9 @@ int main( int argc, char* args[] )
 					SDL_RenderClear( gRenderer );
 
 					background.render(1,1);
+					if( cM == 0 && cB == 0) arrow.render(635,460);
+					if( b==3 ) arrow.render(635,460);
+
 						
 					SDL_Rect* currentClip = &gSpriteClips[frame];
 
@@ -839,34 +955,72 @@ int main( int argc, char* args[] )
                                 //Play the music
                                 Mix_PlayMusic( mBackground, -1 );
                             }
+					if(start == false)
+					{						
+						gMenuBack.render(1,1);
+\
+						SDL_RenderPresent( gRenderer );
+						button.live = true;
+						buttonL.live = true;
+						button.handle(&e);
+						buttonL.handle(&e);
+						
+						if(buttonL.live == false) check = 1; 
+						if(button.live == false)  check = 0;
+
+						if(button.live == false || buttonL.live == false) 
+						{
+							start = true;
+							Mix_HaltMusic();
+						}
+					}
 				if(run == true && start == true)
 					{
 						dot.dir1(b);	
 						if(k==1)
 						{
-							if(dot.move() == false )
+							if(dot.move2() == false )
 							{
-								dot.move();
+								dot.move2();
 								frame = 4;
 							}
 							else 
 							{	
+								if(choose == 1)
+								{
+									cB++;
+									run = false;
+									pointL = true;
+									if(b!=k) {
+									shotGL[cB] = true;
+									scoreL ++;
+								//	scoreL1 = 5 - cB + scoreL;
+								}
+								else
+								{
+									shotRL[cB] = true;
+								//	scoreL1 = 5 - cB + scoreL;
+								}
+								}
+								else{
 								cM++;
 								run = false;
 								pointM = true;
 								if(b!=k) {
 									shotGM[cM] = true;
 									scoreM ++;
-									scoreM1 = 5 - cM + scoreM;
+								//	scoreM1 = 5 - cM + scoreM;
 								}
 								else
 								{
 									shotRM[cM] = true;
-									scoreM1 = 5 - cM + scoreM;
+								//	scoreM1 = 5 - cM + scoreM;
+								}
 								}
 								
 								Mix_PlayChannel( -1, gHigh, 0 );
 								a = rand()%3;
+								//cM++;
 								check = 0;
 
 							}	
@@ -874,106 +1028,155 @@ int main( int argc, char* args[] )
 						
 						if(k==0)
 						{
-							if(dot.move() == false )
+							if(dot.move1() == false )
 							{
-								dot.move();
+								dot.move1();
 								frame = 5;
 								kx = 130;
 							}
 							else 
 							{	
+								if(choose == 1)
+								{
+									cB++;
+									run = false;
+									pointL = true;
+									if(b!=k) {
+									shotGL[cB] = true;
+									scoreL ++;
+								//	scoreL1 = 5 - cB + scoreL;
+								}
+								else
+								{
+									shotRL[cB] = true;
+								//	scoreL1 = 5 - cB + scoreL;
+								}
+								}
+								else{
 								cM++;
 								run = false;
 								pointM = true;
 								if(b!=k) {
 									shotGM[cM] = true;
 									scoreM ++;
-									scoreM1 = 5 - cM + scoreM;
+								//	scoreM1 = 5 - cM + scoreM;
 								}
 								else
 								{
 									shotRM[cM] = true;
-									scoreM1 = 5 - cM + scoreM;
+								//	scoreM1 = 5 - cM + scoreM;
+								}
 								}
 								
 								Mix_PlayChannel( -1, gHigh, 0 );
 								a = rand()%3;
+								//cM++;
 								check = 0;
 							}	
 						}
 
 						if(k==2)
 						{
-							if(dot.move() == false )
+							if(dot.move1() == false )
 							{
-								dot.move();
+								dot.move1();
 								frame = 2;
 								kx = -130;
 							}
 							else 
 							{	
+								if(choose == 1)
+								{
+									cB++;
+									run = false;
+									pointL = true;
+									if(b!=k) {
+									shotGL[cB] = true;
+									scoreL ++;
+								//	scoreL1 = 5 - cB + scoreL;
+								}
+								else
+								{
+									shotRL[cB] = true;
+								//	scoreL1 = 5 - cB + scoreL;
+								}
+								}
+								else{
 								cM++;
 								run = false;
 								pointM = true;
 								if(b!=k) {
 									shotGM[cM] = true;
 									scoreM ++;
-									scoreM1 = 5 - cM + scoreM;
+								//	scoreM1 = 5 - cM + scoreM;
 								}
 								else
 								{
 									shotRM[cM] = true;
-									scoreM1 = 5 - cM + scoreM;
+								//	scoreM1 = 5 - cM + scoreM;
+								}
 								}
 								
 								Mix_PlayChannel( -1, gHigh, 0 );
 								a = rand()%3;
-								check = 0 ;
+								//cM++;
+								check = 0;
 							}	
 						}
 
 						if(b==3)
-						{
+						{	
+			
 								dot.home();
 								frame = 7;
 								kx = 0;
 								run = false;
-								std::cout<<cM<<" "<<scoreM<<" "<<scoreM1;
+								std::cout<<cB<<" "<<scoreL<<" "<<scoreL1;
 
 						}
 					}
+					scoreM1 = 5 - cM + scoreM;
+					scoreL1 = 5 - cB + scoreL;
+					if(pointM == true || pointL == true ){					
+								for(int i=0;i<100;i++){
 
-					if(pointM == true ){					
-								for(int i=0;i<10;i++){
-
-									if(shotGL[i]== true)  vecGL[i].render(200 + i*30 ,660);									
+									if(shotGL[i]== true)  vecGL[i].render(92 + i*44 ,650);									
 								
-									if(shotRL[i] == true) vecRL[i].render(200 + i*30 ,660);
+									if(shotRL[i] == true) vecRL[i].render(92 + i*44 ,650);
 									
-									if(shotGM[i] == true) vecGM[i].render(480 + i*30 ,660);
+									if(shotGM[i] == true) vecGM[i].render(429 + i*44 ,650);
 																
-									if(shotRM[i] == true) vecRM[i].render(480 + i*30 ,660);															
+									if(shotRM[i] == true) vecRM[i].render(429 + i*44 ,650);	
+																									
 								}
+							//	std::cout<<"b";
 					}					
 					
 					SDL_RenderPresent( gRenderer );
 					}
-				
-				if( cM <= 5 ) if(scoreM > scoreL1) winM = true;
-				if(cM>5)
+					
+					if( cM <= 5 )
 					{
-						if(shotGM[cM] == true && shotGL[cB] == false ) winM = true;
-						if(shotGM[cM] == false && shotGL[cB] == true ) winL = true;
+						 if(scoreM > scoreL1  )  winM1 = true;
 					}
-					while(winL == true )
+
+					else
+					{	
+						if(choose == 0 && cB == cM){
+						if(shotGM[cM] == true && shotGL[cM] == false ) winM1 = true ;
+						if(shotGM[cM] == false && shotGL[cM] == true )  winL1 = true; 
+						}
+						
+					}
+					while(winL1 == true )
 					{
 						std::cout<<"l";
-						win.render(1,1);
+						if(choose == 1) winL.render(1,1);
+						if(choose == 0) loseM.render(1,1);
 						SDL_RenderPresent( gRenderer );
 						
-
 						while( SDL_PollEvent( &e ) != 0 ){
-					
+						
 						if( e.type == SDL_QUIT ) quit = true;
 					
 						else if( e.type == SDL_KEYDOWN ){
@@ -982,33 +1185,37 @@ int main( int argc, char* args[] )
 							{
 								case SDLK_m:
 									cB = 0; cM = 0; scoreL = 0; scoreM = 0; scoreL1 = 5; scoreM1 = 5;
-									for(int i = 0; i < 10; i++)
+									for(int i = 0; i < 100; i++)
 									{
 										shotGL[i] = false;
 										shotRL[i] = false;
 										shotGM[i] = false;
 										shotRM[i] = false;
 									}
-									winL = false;
-									winM = false;
+									winL1 = false;
+									winM1 = false;
 									check = 0;
 									kx = 0;
 									dot.home();
 									frame = 0;
+									start = false;
 									break;						
 							}
 						}
 					}
 
 					}
-					while(winM == true )
+					while(winM1 == true )
 					{
 						std::cout<<"l";
-						win.render(1,1);
+					//	showButton(button, mPlay);
+						if(choose == 1) loseL.render(1,1);
+						if(choose == 0) winM.render(1,1);
+					
 						SDL_RenderPresent( gRenderer );
 
-						while( SDL_PollEvent( &e ) != 0 ){
-					
+						while( SDL_PollEvent( &e ) != 0 ){				
+						
 						if( e.type == SDL_QUIT ) quit = true;
 					
 						else if( e.type == SDL_KEYDOWN ){
@@ -1017,25 +1224,27 @@ int main( int argc, char* args[] )
 							{
 								case SDLK_m:
 									cB = 0; cM = 0; scoreL = 0; scoreM = 0; scoreL1 = 5; scoreM1 = 5;
-									for(int i = 0; i < 10; i++)
+									for(int i = 0; i < 100; i++)
 									{
 										shotGL[i] = false;
 										shotRL[i] = false;
 										shotGM[i] = false;
 										shotRM[i] = false;
 									}
-									winL = false;
-									winM = false;
+									winL1 = false;
+									winM1 = false;
 									check = 0;
 									kx = 0;
 									dot.home();
 									frame = 0;
+									start = false;
 									break;						
 							}
 						}
 					}
 
 					}
+					
 			}	
 		}
 	}
